@@ -6,7 +6,7 @@ const ServerError = require('../helpers/server-error')
 
 const makeSut = () => {
   class AuthUseCaseSpy {
-    auth (email, password) {
+    async auth (email, password) {
       this.email = email
       this.password = password
       return this.accessToken
@@ -19,7 +19,7 @@ const makeSut = () => {
 }
 const makeAuthUseCaseWithError = () => {
   class AuthUseCaseSpy {
-    auth () {
+    async auth () {
       throw new Error()
     }
   }
@@ -35,7 +35,7 @@ describe('Login Router', () => {
         password: 'any_password'
       }
     }
-    const httpResponse = sut.route(httpRequest)
+    const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(400)
     expect(httpResponse.body).toEqual(new MissingParamsError('email'))
   })
@@ -46,20 +46,20 @@ describe('Login Router', () => {
         email: 'any_mail@mail.com'
       }
     }
-    const httpResponse = sut.route(httpRequest)
+    const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(400)
     expect(httpResponse.body).toEqual(new MissingParamsError('password'))
   })
   test('Should return 500 if no httpRequest is provided', async () => {
     const { sut } = makeSut()
-    const httpResponse = sut.route()
+    const httpResponse = await sut.route()
     expect(httpResponse.statusCode).toBe(500)
     expect(httpResponse.body).toEqual(new ServerError())
   })
   test('Should return 500 if no httpRequest has no body', async () => {
     const { sut } = makeSut()
     const httpRequest = {}
-    const httpResponse = sut.route(httpRequest)
+    const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(500)
     expect(httpResponse.body).toEqual(new ServerError())
   })
@@ -84,7 +84,7 @@ describe('Login Router', () => {
         password: 'invalid_password'
       }
     }
-    const httpResponse = sut.route(httpRequest)
+    const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(401)
     expect(httpResponse.body).toEqual(new UnauthorizedError())
   })
@@ -96,7 +96,7 @@ describe('Login Router', () => {
         password: 'valid_password'
       }
     }
-    const httpResponse = sut.route(httpRequest)
+    const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(200)
     expect(httpResponse.body.accessToken).toBe(authUseCaseSpy.accessToken)
   })
@@ -108,7 +108,7 @@ describe('Login Router', () => {
         password: 'any_password'
       }
     }
-    const httpResponse = sut.route(httpRequest)
+    const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(500)
     expect(httpResponse.body).toEqual(new ServerError())
   })
@@ -122,7 +122,7 @@ describe('Login Router', () => {
         password: 'any_password'
       }
     }
-    const httpResponse = sut.route(httpRequest)
+    const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(500)
     expect(httpResponse.body).toEqual(new ServerError())
   })
@@ -134,7 +134,7 @@ describe('Login Router', () => {
         password: 'any_password'
       }
     }
-    const httpResponse = sut.route(httpRequest)
+    const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(500)
     expect(httpResponse.body).toEqual(new ServerError())
   })
