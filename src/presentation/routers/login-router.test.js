@@ -17,6 +17,16 @@ const makeSut = () => {
   authUseCaseSpy.accessToken = 'valid_token'
   return { sut, authUseCaseSpy }
 }
+const makeAuthUseCaseWithError = () => {
+  class AuthUseCaseSpy {
+    auth () {
+      throw new Error()
+    }
+  }
+  const authUseCaseSpy = new AuthUseCaseSpy()
+  const sut = new LoginRouter(authUseCaseSpy)
+  return { sut, authUseCaseSpy }
+}
 describe('Login Router', () => {
   test('Should return 400 if no email is provided', async () => {
     const { sut } = makeSut()
@@ -106,6 +116,18 @@ describe('Login Router', () => {
     class AuthUseCaseSpy {}
     const authUseCaseSpy = new AuthUseCaseSpy()
     const sut = new LoginRouter(authUseCaseSpy)
+    const httpRequest = {
+      body: {
+        email: 'any_mail@mail.com',
+        password: 'any_password'
+      }
+    }
+    const httpResponse = sut.route(httpRequest)
+    expect(httpResponse.statusCode).toBe(500)
+    expect(httpResponse.body).toEqual(new ServerError())
+  })
+  test('Should return 500 if no AuthUseCase throws', async () => {
+    const { sut } = makeAuthUseCaseWithError()
     const httpRequest = {
       body: {
         email: 'any_mail@mail.com',
