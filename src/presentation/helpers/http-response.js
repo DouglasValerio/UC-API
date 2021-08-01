@@ -1,6 +1,6 @@
 
-const ServerError = require('./server-error')
-const UnauthorizedError = require('./unauthorized-error')
+const ServerError = require('../errors/server-error')
+const UnauthorizedError = require('../errors/unauthorized-error')
 module.exports = class HttpResponse {
   static badRequest (error) {
     return { statusCode: 400, body: error }
