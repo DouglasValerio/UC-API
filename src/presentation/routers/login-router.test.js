@@ -6,6 +6,13 @@ const ServerError = require('../helpers/server-error')
 const InvalidParamsError = require('../helpers/invalid-params-error')
 
 const makeSut = () => {
+  const authUseCaseSpy = makeAuthUseCaseSpy()
+  const emailValidatorSpy = makeEmailValidator()
+  const sut = new LoginRouter(authUseCaseSpy, emailValidatorSpy)
+  authUseCaseSpy.accessToken = 'valid_token'
+  return { sut, authUseCaseSpy, emailValidatorSpy }
+}
+const makeAuthUseCaseSpy = () => {
   class AuthUseCaseSpy {
     async auth (email, password) {
       this.email = email
@@ -13,11 +20,7 @@ const makeSut = () => {
       return this.accessToken
     }
   }
-  const authUseCaseSpy = new AuthUseCaseSpy()
-  const emailValidatorSpy = makeEmailValidator()
-  const sut = new LoginRouter(authUseCaseSpy, emailValidatorSpy)
-  authUseCaseSpy.accessToken = 'valid_token'
-  return { sut, authUseCaseSpy, emailValidatorSpy }
+  return new AuthUseCaseSpy()
 }
 const makeEmailValidator = () => {
   class EmailValidatorSpy {
@@ -162,5 +165,31 @@ describe('Login Router', () => {
     const httpResponse = await sut.route(httpRequest)
     expect(httpResponse.statusCode).toBe(400)
     expect(httpResponse.body).toEqual(new InvalidParamsError('email'))
+  })
+  test('Should return 500 if no EmailValidator is provided', async () => {
+    const authUseCaseSpy = makeAuthUseCaseSpy()
+    const sut = new LoginRouter(authUseCaseSpy)
+    const httpRequest = {
+      body: {
+        email: 'any_mail@mail.com',
+        password: 'any_password'
+      }
+    }
+    const httpResponse = await sut.route(httpRequest)
+    expect(httpResponse.statusCode).toBe(500)
+    expect(httpResponse.body).toEqual(new ServerError())
+  })
+  test('Should return 500 if EmailValidator has no isValid()  method', async () => {
+    const authUseCaseSpy = makeAuthUseCaseSpy()
+    const sut = new LoginRouter(authUseCaseSpy, {})
+    const httpRequest = {
+      body: {
+        email: 'any_mail@mail.com',
+        password: 'any_password'
+      }
+    }
+    const httpResponse = await sut.route(httpRequest)
+    expect(httpResponse.statusCode).toBe(500)
+    expect(httpResponse.body).toEqual(new ServerError())
   })
 })
