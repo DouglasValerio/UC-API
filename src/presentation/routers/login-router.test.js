@@ -14,9 +14,20 @@ const makeSut = () => {
     }
   }
   const authUseCaseSpy = new AuthUseCaseSpy()
-  const sut = new LoginRouter(authUseCaseSpy)
+  const emailValidatorSpy = makeEmailValidator()
+  const sut = new LoginRouter(authUseCaseSpy, emailValidatorSpy)
   authUseCaseSpy.accessToken = 'valid_token'
-  return { sut, authUseCaseSpy }
+  return { sut, authUseCaseSpy, emailValidatorSpy }
+}
+const makeEmailValidator = () => {
+  class EmailValidatorSpy {
+    isValid (email) {
+      return this.isEmailValid
+    }
+  }
+  const emavalidatorSpy = new EmailValidatorSpy()
+  emavalidatorSpy.isEmailValid = true
+  return emavalidatorSpy
 }
 const makeAuthUseCaseWithError = () => {
   class AuthUseCaseSpy {
@@ -140,7 +151,8 @@ describe('Login Router', () => {
     expect(httpResponse.body).toEqual(new ServerError())
   })
   test('Should return 400 if an invalid email is provided', async () => {
-    const { sut } = makeSut()
+    const { sut, emailValidatorSpy } = makeSut()
+    emailValidatorSpy.isEmailValid = false
     const httpRequest = {
       body: {
         email: 'invalid@invalid.com',
