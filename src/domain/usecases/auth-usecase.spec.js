@@ -10,7 +10,8 @@ class AuthUseCase {
     if (!password) throw new MissingParamsError('password')
     if (!this.findUserByEmailRepository) throw new MissingParamsError('findUserByEmailRepository')
     if (!this.findUserByEmailRepository.findUser) throw new InvalidParamsError('findUserByEmailRepository')
-    await this.findUserByEmailRepository.findUser(email)
+    const userToken = await this.findUserByEmailRepository.findUser(email)
+    if (!userToken) return null
   }
 }
 const makeSut = () => {
@@ -49,5 +50,10 @@ describe('Auth Usecase', () => {
     const sut = new AuthUseCase({})
     const authPromise = sut.auth('any_mail@mail.com', 'any_password')
     expect(authPromise).rejects.toThrow(new InvalidParamsError('findUserByEmailRepository'))
+  })
+  test('Should return null if findUserByEmailRepository retunrs null', async () => {
+    const { sut } = makeSut()
+    const accessToken = await sut.auth('invalid_mail@mail.com', 'any_password')
+    expect(accessToken).toBeNull()
   })
 })
