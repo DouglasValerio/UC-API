@@ -38,7 +38,7 @@ describe('Auth Usecase', () => {
     const authPromise = sut.auth('any_mail@mail.com', 'any_password')
     await expect(authPromise).rejects.toThrow()
   })
-  test('Should return null if findUserByEmailRepository retunrs null', async () => {
+  test('Should return null if invalid email is provided', async () => {
     const { sut } = makeSut()
     const accessToken = await sut.auth('invalid_mail@mail.com', 'any_password')
     expect(accessToken).toBeNull()
