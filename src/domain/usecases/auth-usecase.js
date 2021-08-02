@@ -10,7 +10,7 @@ module.exports = class AuthUseCase {
     if (!password) throw new MissingParamsError('password')
     const user = await this.findUserByEmailRepository.findUser(email)
     if (!user) return null
-    await this.encrypter.compare(password, user.password)
-    return null
+    const isPasswordValid = await this.encrypter.compare(password, user.password)
+    if (!isPasswordValid) return null
   }
 }
