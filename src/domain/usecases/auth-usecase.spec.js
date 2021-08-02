@@ -12,6 +12,17 @@ const makeEncrypter = () => {
   const encrypterSpy = new EncrypterSpy()
   return encrypterSpy
 }
+const makeTokenGenerator = () => {
+  class TokenGeneratorSpy {
+    createToken (id) {
+      this.userId = id
+      return this.accessToken
+    }
+  }
+  const tokenGeneratorSpy = new TokenGeneratorSpy()
+  tokenGeneratorSpy.accessToken = 'access_token'
+  return tokenGeneratorSpy
+}
 const makeFindUserByEmailRepository = () => {
   class FindUserByEmailRepositorySpy {
     async findUser (email) {
@@ -25,11 +36,12 @@ const makeFindUserByEmailRepository = () => {
 const makeSut = () => {
   const encrypterSpy = makeEncrypter()
   const findUserByEmailRepositorySpy = makeFindUserByEmailRepository()
+  const tokenGeneratorSpy = makeTokenGenerator()
   encrypterSpy.isValid = true
 
-  findUserByEmailRepositorySpy.user = { password: 'hashed_password' }
-  const sut = new AuthUseCase(findUserByEmailRepositorySpy, encrypterSpy)
-  return { sut, findUserByEmailRepositorySpy, encrypterSpy }
+  findUserByEmailRepositorySpy.user = { id: 'any_id', password: 'hashed_password' }
+  const sut = new AuthUseCase(findUserByEmailRepositorySpy, encrypterSpy, tokenGeneratorSpy)
+  return { sut, findUserByEmailRepositorySpy, encrypterSpy, tokenGeneratorSpy }
 }
 
 describe('Auth Usecase', () => {
@@ -75,5 +87,10 @@ describe('Auth Usecase', () => {
     await sut.auth('valid_mail@mail.com', 'any_password')
     expect(encrypterSpy.password).toBe('any_password')
     expect(encrypterSpy.hashedPassword).toBe(findUserByEmailRepositorySpy.user.password)
+  })
+  test('Should call TokenGenerator with correct userId', async () => {
+    const { sut, findUserByEmailRepositorySpy, tokenGeneratorSpy } = makeSut()
+    await sut.auth('valid_mail@mail.com', 'valid_password')
+    expect(tokenGeneratorSpy.userId).toBe(findUserByEmailRepositorySpy.user.id)
   })
 })
