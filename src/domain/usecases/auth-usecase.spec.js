@@ -1,5 +1,5 @@
 
-const { MissingParamsError, InvalidParamsError } = require('../../utils/errors')
+const { MissingParamsError } = require('../../utils/errors')
 const AuthUseCase = require('./auth-usecase')
 const makeSut = () => {
   class FindUserByEmailRepositorySpy {
@@ -31,12 +31,12 @@ describe('Auth Usecase', () => {
   test('Should throw if no repository is provided', async () => {
     const sut = new AuthUseCase()
     const authPromise = sut.auth('any_mail@mail.com', 'any_password')
-    await expect(authPromise).rejects.toThrow(new MissingParamsError('findUserByEmailRepository'))
+    await expect(authPromise).rejects.toThrow()
   })
   test('Should throw if findUserByEmailRepository has no findUser method', async () => {
     const sut = new AuthUseCase({})
     const authPromise = sut.auth('any_mail@mail.com', 'any_password')
-    await expect(authPromise).rejects.toThrow(new InvalidParamsError('findUserByEmailRepository'))
+    await expect(authPromise).rejects.toThrow()
   })
   test('Should return null if findUserByEmailRepository retunrs null', async () => {
     const { sut } = makeSut()
